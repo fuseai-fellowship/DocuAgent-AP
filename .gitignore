@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+TRACK.md
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data & outputs
+data/
+outputs/
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.json
+
+# OS/system
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE configs
+.vscode/
+.idea/
