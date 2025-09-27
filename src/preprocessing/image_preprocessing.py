@@ -122,7 +122,7 @@ def preprocess_document(image):
     image = remove_borders(image)
     return image
 
-
 img = cv2.imread("data/skewed_image.jpg")
 processed = preprocess_document(img)
-display(processed)
+# display(processed)
+cv2.imwrite("temp/processed_image.jpg", processed)
