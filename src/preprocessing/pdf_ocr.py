@@ -1,9 +1,7 @@
-
 from pathlib import Path
 import fitz  # PyMuPDF
 from paddleocr import PaddleOCR
 import paddle, numpy as np, json, time
-
 
 # Local imports
 from src.utils.paths import RAW, PROCESSED, OUTPUT
