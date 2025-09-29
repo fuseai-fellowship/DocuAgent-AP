@@ -35,3 +35,6 @@ Thumbs.db
 # IDE configs
 .vscode/
 .idea/
+
+# Temporary output folder
+temp/
