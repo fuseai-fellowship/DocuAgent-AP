@@ -44,7 +44,7 @@ def run_ocr_on_image(image_path, ocr, pdf_name=None):
     
      # aves JSON inside outputs/image_name/ if not part of a PDF
     if pdf_name==None:
-         save_dir = OUTPUT / image_name
+         save_dir = OUTPUT
          save_dir.mkdir(parents=True, exist_ok=True)
 
          output_json = save_dir / f"{image_name}_result.json"
@@ -85,7 +85,7 @@ def process_pdf(pdf_path, ocr):
         all_pages_results[f"page_{i+1}"] = page_results
 
     #  Save JSON inside outputs/pdf_name/
-    save_dir = OUTPUT / pdf_name
+    save_dir = OUTPUT 
     save_dir.mkdir(parents=True, exist_ok=True)
 
     output_json = save_dir / f"{pdf_name}_result.json"
@@ -99,24 +99,24 @@ def process_pdf(pdf_path, ocr):
 if __name__ == "__main__":
     # to initialize OCR once
     
-    #---- text image preprocessing + text detection + using mobile model ------
-    ocr = PaddleOCR(
-        text_detection_model_name="PP-OCRv5_mobile_det",
-        text_recognition_model_name="PP-OCRv5_mobile_rec",
-        use_doc_orientation_classify=True,
-        use_doc_unwarping=False,
-        use_textline_orientation=False
-    )
-    #---- text detection + text recognition using server model ----
+    #---- text image preprocessing + text detection + using mobile model ------  MODEL ------ 1 
+    # ocr = PaddleOCR(
+    #     text_detection_model_name="PP-OCRv5_mobile_det",
+    #     text_recognition_model_name="PP-OCRv5_mobile_rec",
+    #     use_doc_orientation_classify=True,
+    #     use_doc_unwarping=False,
+    #     use_textline_orientation=False
+    # )
+    #---- text detection + text recognition using server model ----     MODEL ------ 2
 
     # ocr = PaddleOCR(
     #     use_doc_orientation_classify=False,
     #     use_doc_unwarping=False,
     #     use_textline_orientation=False)
 
-    #---- text image preprocessing + text detection + textline orientation classification + text recognition ------
+    #---- text image preprocessing + text detection + textline orientation classification + text recognition ------ MODEL ------ 3
 
-    # ocr = PaddleOCR(use_doc_orientation_classify=True, use_doc_unwarping=True)
+    ocr = PaddleOCR(use_doc_orientation_classify=True, use_doc_unwarping=True, use_textline_orientation=True)
    
    
     sample_image1 = RAW / "sample_image1.png"
