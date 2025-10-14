@@ -24,6 +24,9 @@ outputs/
 *.jpg
 *.jpeg
 *.json
+*.html
+*.xlsx
+*.md
 
 # OS/system
 .DS_Store
