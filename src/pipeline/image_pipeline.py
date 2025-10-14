@@ -28,45 +28,13 @@ def preprocess_region(img, x1, y1, x2, y2, pad_w=5, pad_h=5, min_height=32):
     
     return region
 
-def normalize_full_page_output(ocr_result):
-    all_ocr_result = {}
-    
-    rec_texts = ocr_result["rec_texts"]
-    rec_scores = ocr_result["rec_scores"]
-    rec_polys = ocr_result["rec_polys"]
-
-     # convert each polygon (4 points) to bounding box [x1, y1, x2, y2]
-    bounding_boxes = []
-    for poly in rec_polys:
-        xs = [pt[0] for pt in poly]
-        ys = [pt[1] for pt in poly]
-        bounding_boxes.append([min(xs), min(ys), max(xs), max(ys)])
-
-    # Enumerate and build structured results per region
-    for i, (rec_score, rec_text, poly) in enumerate(zip(rec_scores, rec_texts, rec_polys)):
-        structured = {}
-        structured["class"] = "full_page"
-        structured["confidence"] = float(rec_score)
-        structured["bbox"] = [int(v) for v in bounding_boxes[i]]   # normalized per region
-        structured["recognized_texts"] = [rec_text]
-        structured["recognized_confidence"] = [float(rec_score)]
-        structured["recognized_polys"] = [
-            pt.tolist() if isinstance(pt, np.ndarray) else pt for pt in poly
-        ]  # ensure polys are lists
-
-        all_ocr_result[f"region_{i}"] = structured
-
-    return all_ocr_result
-
-
 def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_save=False,pdf_page_num=1):
-
 
     image_name = Path(img_path).stem
     
     SKIP_FOR_OCR = ["table", "figure_table_title", "chart", "image", "seal", "formula"]  
     
-    # Step 1: Layout Detection
+    # Layout Detection
     if preprocess:
         pass
     else:
@@ -83,12 +51,7 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
             res.save_to_img(str(layout_img))
             res.save_to_json(str(layout_json))
         
-    # Step 2: OCR on useful regions
-    detected_classes = []
-    for page_result in layout_results:
-        for box in page_result["boxes"]:
-            detected_classes.append(box["label"])
-
+ 
     file_name = pdf_name if pdf_name else image_name
     ocr_img_dir = OUTPUT / file_name / "ocr/img"
     ocr_json_dir = OUTPUT / file_name / "ocr/json"
@@ -100,21 +63,11 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
     
     all_ocr_results = {}    
     
-    # Case 1: If no charts or table then do full page OCR
-    if not any(cls in SKIP_FOR_OCR for cls in detected_classes):
-        print("No charts or tables detected, performing full page OCR.")
-        
-        ocr_result = ocr_on_image(img_path)
-        for res in ocr_result:
-            res.save_to_img(str(ocr_img_dir))
-            all_ocr_results= normalize_full_page_output(res)  
-        
-    else:
-        img = cv2.imread(str(img_path))
-        ocr = ocr_model()
-        before_ocr_time = time.time()
-        print(f"[INFO] Performing OCR on detected regions for {image_name}")
-        for page_result in layout_results:
+    img = cv2.imread(str(img_path))
+    ocr = ocr_model()
+    before_ocr_time = time.time()
+    print(f"[INFO] Performing OCR on detected regions for {image_name}")
+    for page_result in layout_results:
           for i, box in enumerate(page_result["boxes"]):
             cls = box['label']
             conf = box['score']
@@ -125,15 +78,15 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
             # --- OCR Regions preprocessed and cropped 
             if (cls not in SKIP_FOR_OCR):
                 ocr_result = ocr.predict(region)
-                out_img = ocr_img_dir / f"{image_name}_{cls}_{i}.png"
-                # cv2.imwrite(str(out_img), region)
+                
+                
                 for res in ocr_result:
                     res.save_to_img(str(ocr_img_dir))
                 # Store OCR results per region
             
                 if f"region_{i}" not in all_ocr_results:
                       all_ocr_results[f"region_{i}"] = []
-
+                
                 for res in ocr_result:
                     structured = {}
                     structured["class"] = cls
@@ -142,12 +95,26 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
                     structured["recognized_texts"] = res['rec_texts']
                     structured["recognized_confidence"] = [float(score) for score in res['rec_scores']]
                     
-                    ##### ----------------- COORDINATE POINTS ARE RELATIVE TO THE BBOX ------------- 
+                    ##### ----------------- COORDINATE POINTS OF CROPPED IMAGE ARE ADDED TO BBOX COORDINATES  ------------- 
+                    for poly in res['rec_polys']:
+                         for p in poly:
+                             p[0] =float( p[0] + x1)
+                             p[1] = float(p[1] + y1)
+
+                             pt1 = (int(p[0]), int(p[1]))
+                             pt2 = (int(p[0]+1), int(p[1]+1))  # small rectangle for visibility
+                             cv2.rectangle(img, pt1, pt2, (0, 255, 0), 1)  # green 1px
+                             
+                    for poly in res['rec_polys']:
+                           pts = np.array(poly, np.int32)
+                           pts = pts.reshape((-1, 1, 2))
+                           cv2.polylines(img, [pts], isClosed=True, color=(0, 0, 255), thickness=2)  # red polygon
+                    #json serializable format 
                     structured["recognized_polys"] = [
                               poly.tolist() if isinstance(poly, np.ndarray) else poly
                                 for poly in res['rec_polys']
                       ] 
-                    ##### --------------------------------------------------------------------
+                    
                     all_ocr_results[f"region_{i}"] = structured
 
             # --- formula Regions evaluated by another model ---
@@ -159,11 +126,12 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
                     f_res.save_to_img(save_path=str(formula_img_path))
                     f_res.save_to_json(save_path=str(formula_json_path))
         
-        after_ocr_time = time.time()
-        print(f"[INFO] OCR on regions for {image_name} took {after_ocr_time - before_ocr_time:.2f} seconds")
+    after_ocr_time = time.time()
+    print(f"[INFO] OCR on regions for {image_name} took {after_ocr_time - before_ocr_time:.2f} seconds")
 
     ocr_json_path = ocr_json_dir / f"{file_name}_ocr.json"
-
+    annotated_img_path = ocr_img_dir / f"{image_name}_ocr_polygons.png"
+    cv2.imwrite(str(annotated_img_path), img)
     # to make sure file is empty
     if not ocr_json_path.exists():
         with open(ocr_json_path, "w", encoding="utf-8") as f:
@@ -173,10 +141,10 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
     with open(ocr_json_path, "r", encoding="utf-8") as f:
         current_data = json.load(f)
 
-    # update with new page data
+    # updated with each region results
     current_data[f"page_{pdf_page_num}"] = all_ocr_results
 
-    # write back to file
+    # write to file
     with open(ocr_json_path, "w", encoding="utf-8") as f:
         json.dump(current_data, f, ensure_ascii=False, indent=4)
 

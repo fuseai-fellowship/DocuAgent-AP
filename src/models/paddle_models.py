@@ -29,7 +29,7 @@ def ocr_model():
             text_detection_model_name="PP-OCRv5_server_det",
             text_recognition_model_name="PP-OCRv5_server_rec",
             lang='en',
-            use_doc_orientation_classify=True,
+            use_doc_orientation_classify=False,
             use_doc_unwarping=False,  # didnt perform well so not used 
             use_textline_orientation=True,
             device="gpu:0" if paddle.is_compiled_with_cuda() else "cpu"
