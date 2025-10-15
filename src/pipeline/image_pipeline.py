@@ -4,6 +4,7 @@ from pathlib import Path
 from src.models.paddle_models import ocr_model
 from src.pipeline.layout_on_image import layout_on_image
 from src.pipeline.ocr_on_image import ocr_on_image
+from src.pipeline.image_preprocessing import preprocess_document
 
 
 from src.utils.paths import OUTPUT
@@ -28,7 +29,7 @@ def preprocess_region(img, x1, y1, x2, y2, pad_w=5, pad_h=5, min_height=32):
     
     return region
 
-def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_save=False,pdf_page_num=1):
+def image_pipeline(img_path, pdf_name=False, preprocess=True, layout_result_save=False,pdf_page_num=1):
 
     image_name = Path(img_path).stem
     
@@ -36,7 +37,12 @@ def image_pipeline(img_path, pdf_name=False, preprocess=False, layout_result_sav
     
     # Layout Detection
     if preprocess:
-        pass
+       img = cv2.imread(str(img_path))
+       print(f"[INFO] Preprocessing enabled for {img_path}")
+       preprocessed_img = preprocess_document(img)
+       temp_path = Path("temp") / f"preprocessed_{Path(img_path).name}"
+       temp_path.parent.mkdir(parents=True, exist_ok=True)
+       cv2.imwrite(str(temp_path), preprocessed_img)     
     else:
         layout_results = layout_on_image(img_path)
    
