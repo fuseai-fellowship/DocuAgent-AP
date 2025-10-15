@@ -72,15 +72,5 @@ Key dependencies include:
 
 For the complete list, see `requirements.txt`.
 
-## Quick Start
-
-### Running the Pipeline
-
-
-### Using Jupyter Notebooks
-
-Explore the `notebooks/` directory for experiment notebooks covering:
-- PDF preprocessing and OCR
-- Model fine-tuning
 
 
