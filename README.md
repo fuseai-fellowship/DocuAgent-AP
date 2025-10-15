@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 Key dependencies include:
 
-- **PyMuPDF** — PDF to text conversion
+- **PyMuPDF** — PDF to image conversion
 - **paddleocr** — Optical character recognition and Layout Models
 
 For the complete list, see `requirements.txt`.
