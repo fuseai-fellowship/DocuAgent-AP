@@ -18,7 +18,7 @@ def process_pdf_pipeline(pdf_path, preprocess=False, layout_result_save =False):
         
         page_start_time = time.time()
         print(f"[INFO] Processing page {i+1} of {pdf_name}")
-        image_pipeline(img_path, pdf_name, preprocess, layout_result_save,pdf_page_num=i+1)
+        image_pipeline(img_path, True, preprocess, layout_result_save,pdf_page_num=i+1)
 
         page_end_time = time.time()
         page_elapsed = page_end_time - page_start_time
