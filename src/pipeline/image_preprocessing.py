@@ -130,11 +130,23 @@ def deskew(image):
 
 # function to remove borders
 def remove_borders(image):
-    contours, _ = cv2.findContours(image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cntsSorted = sorted(contours, key=lambda x: cv2.contourArea(x))
-    cnt = cntsSorted[-1]
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if not contours:
+        return image
+
+    cnt = max(contours, key=cv2.contourArea)
     x, y, w, h = cv2.boundingRect(cnt)
+
     return image[y:y+h, x:x+w]
+
 # Full preprocessing pipeline 
 def preprocess_document(image):
     image, _ = deskew(image)
