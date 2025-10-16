@@ -3,12 +3,10 @@ import time, cv2, json, numpy as np
 from pathlib import Path
 from src.models.paddle_models import ocr_model
 from src.pipeline.layout_on_image import layout_on_image
-from src.pipeline.ocr_on_image import ocr_on_image
 from src.pipeline.image_preprocessing import preprocess_document
-
-
-from src.utils.paths import OUTPUT
+from src.utils.paths import OUTPUT, RAW
 from src.models.paddle_models import formula_model
+
 
 def preprocess_region(img, x1, y1, x2, y2, pad_w=5, pad_h=5, min_height=32):
       # Add padding with boundary checks
@@ -29,9 +27,12 @@ def preprocess_region(img, x1, y1, x2, y2, pad_w=5, pad_h=5, min_height=32):
     
     return region
 
-def image_pipeline(img_path, pdf_name=False, preprocess=True, layout_result_save=False,pdf_page_num=1):
+
+def image_pipeline(img_path, pdf_name=None, preprocess=True, layout_result_save=False,pdf_page_num=1, ocr_img_save = False):
 
     image_name = Path(img_path).stem
+    file_name = pdf_name if pdf_name else image_name  # To create save directories
+    
     
     SKIP_FOR_OCR = ["table", "figure_table_title", "chart", "image", "seal", "formula"]  
     
@@ -39,16 +40,27 @@ def image_pipeline(img_path, pdf_name=False, preprocess=True, layout_result_save
     if preprocess:
        img = cv2.imread(str(img_path))
        print(f"[INFO] Preprocessing enabled for {img_path}")
-       preprocessed_img = preprocess_document(img)
-       temp_path = Path("temp") / f"preprocessed_{Path(img_path).name}"
-       temp_path.parent.mkdir(parents=True, exist_ok=True)
-       cv2.imwrite(str(temp_path), preprocessed_img)     
-    else:
-        layout_results = layout_on_image(img_path)
-   
-    if layout_result_save:     
+       before_preprocess_time = time.time()
                 
-        layout_dir = OUTPUT / pdf_name / "layout" if pdf_name else OUTPUT / image_name / "layout"
+       preprocessed_img = preprocess_document(img)
+        
+       preprocessed_img_path = ( 
+                        RAW / pdf_name / f"preprocessed_{Path(img_path).name}" 
+                        if pdf_name is not None
+                        else RAW / f"preprocessed_{Path(img_path).name}"
+        )
+       preprocessed_img_path.parent.mkdir(parents=True, exist_ok=True)
+       cv2.imwrite(str(preprocessed_img_path), preprocessed_img)
+       after_preprocess_time = time.time()
+       print(f"[INFO] Preprocessing took {after_preprocess_time - before_preprocess_time:.2f} seconds")
+       img_path = preprocessed_img_path
+
+    layout_results = layout_on_image(img_path)
+    
+    
+    if layout_result_save:     
+
+        layout_dir = OUTPUT / file_name / "layout"
         layout_dir.mkdir(parents=True, exist_ok=True)
     
         for res in layout_results:
@@ -56,17 +68,16 @@ def image_pipeline(img_path, pdf_name=False, preprocess=True, layout_result_save
             layout_json = layout_dir / f"{image_name}_layout.json"
             res.save_to_img(str(layout_img))
             res.save_to_json(str(layout_json))
-        
- 
-    file_name = pdf_name if pdf_name else image_name
-    ocr_img_dir = OUTPUT / file_name / "ocr/img"
+
     ocr_json_dir = OUTPUT / file_name / "ocr/json"
     formula_dir = OUTPUT / file_name / "formula"
-    
-    ocr_img_dir.mkdir(parents=True, exist_ok=True)
     ocr_json_dir.mkdir(parents=True, exist_ok=True)
     formula_dir.mkdir(parents=True, exist_ok=True)
     
+    if ocr_img_save:
+        ocr_img_dir = OUTPUT / file_name / "ocr/images"
+        ocr_img_dir.mkdir(parents=True, exist_ok=True)
+        
     all_ocr_results = {}    
     
     img = cv2.imread(str(img_path))
@@ -85,9 +96,9 @@ def image_pipeline(img_path, pdf_name=False, preprocess=True, layout_result_save
             if (cls not in SKIP_FOR_OCR):
                 ocr_result = ocr.predict(region)
                 
-                
-                for res in ocr_result:
-                    res.save_to_img(str(ocr_img_dir))
+                if ocr_img_save:
+                    for res in ocr_result:
+                        res.save_to_img(str(ocr_img_dir))
                 # Store OCR results per region
             
                 if f"region_{i}" not in all_ocr_results:
@@ -136,8 +147,9 @@ def image_pipeline(img_path, pdf_name=False, preprocess=True, layout_result_save
     print(f"[INFO] OCR on regions for {image_name} took {after_ocr_time - before_ocr_time:.2f} seconds")
 
     ocr_json_path = ocr_json_dir / f"{file_name}_ocr.json"
-    annotated_img_path = ocr_img_dir / f"{image_name}_ocr_polygons.png"
-    cv2.imwrite(str(annotated_img_path), img)
+    if ocr_img_save:
+         annotated_img_path = ocr_img_dir / f"{image_name}_ocr_polygons.png"
+         cv2.imwrite(str(annotated_img_path), img)
     # to make sure file is empty
     if not ocr_json_path.exists():
         with open(ocr_json_path, "w", encoding="utf-8") as f:

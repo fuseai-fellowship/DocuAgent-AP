@@ -157,7 +157,7 @@ def preprocess_document(image):
     image = noise_removal(image)
     return image
 
-img = cv2.imread("data/skewed_image.jpg")
-processed = preprocess_document(img)
-# display(processed)
-cv2.imwrite("temp/processed_image.jpg", processed)
+# img = cv2.imread("data/skewed_image.jpg")
+# processed = preprocess_document(img)
+# # display(processed)
+# cv2.imwrite("temp/processed_image.jpg", processed)
