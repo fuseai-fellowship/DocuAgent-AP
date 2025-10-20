@@ -1,0 +1,12 @@
+-r base.txt
+
+# --- Jupyter / Notebook Tools ---
+jupyter
+notebook
+jupyterlab
+ipywidgets
+ipykernel
+
+# --- Development & Debugging ---
+pytest
+debugpy

@@ -8,7 +8,7 @@ _formula_instance = None
 def layout_model():
     global _layout_instance
     if _layout_instance is None:
-        print("Initializing PaddleOCR model...")
+        print("[INFO] Initializing PP-DocLayout model...")
         _layout_instance = LayoutDetection(
             model_name="PP-DocLayout_plus-L",
             threshold={2: 0.2, 12: 0.2, 14: 0.2},  # text, header, footer
@@ -23,7 +23,7 @@ def layout_model():
 def ocr_model():
     global _ocr_instance
     if _ocr_instance is None:
-        print("Initializing PaddleOCR model...")
+        print("[INFO] Initializing PaddleOCR model...")
    
         _ocr_instance = PaddleOCR(
             text_detection_model_name="PP-OCRv5_server_det",
@@ -41,6 +41,7 @@ def ocr_model():
 def formula_model():
     global _formula_instance
     if _formula_instance is None:
+        print("[INFO] Initializing Formula Recognition model...")
         _formula_instance = FormulaRecognition(
             device="gpu:0" if paddle.is_compiled_with_cuda() else "cpu"
         )
