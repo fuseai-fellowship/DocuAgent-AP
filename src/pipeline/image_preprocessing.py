@@ -149,7 +149,7 @@ def remove_borders(image):
 
 # Full preprocessing pipeline 
 def preprocess_document(image):
-    image, _ = deskew(image)
+    # image, _ = deskew(image)
     image = remove_borders(image)
     image = sharpen_image(image)
     image = enhance_contrast(image)

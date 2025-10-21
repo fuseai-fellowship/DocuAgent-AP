@@ -1,5 +1,6 @@
 from paddlex import create_pipeline
 import paddle
+from pathlib import Path
 
 table_recognition_instance = None
 
@@ -17,6 +18,8 @@ def table_recognition_model():
 
 def run_table_recognition(image_path, output_dir="./output"):
     pipeline = table_recognition_model()
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     output = pipeline.predict(
         input=image_path,
@@ -24,11 +27,13 @@ def run_table_recognition(image_path, output_dir="./output"):
         use_doc_unwarping=False,
     )
 
+    html_files = []
     for res in output:
         res.print()
-        res.save_to_img(output_dir)
-        res.save_to_xlsx(output_dir)
         res.save_to_html(output_dir)
-        res.save_to_json(output_dir)
+        html_files.extend(list(output_dir.glob("*.html")))
 
-    return output
+    if not html_files:
+        print(f"[WARNING] No HTML files were generated in {output_dir}")
+
+    return html_files

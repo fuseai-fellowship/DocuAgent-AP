@@ -20,7 +20,10 @@ def save_results(OUTPUT,file_name,img_name, img, page_num, masked_img,ocr_result
     
         for res in layout_results:
             res.save_to_json(str(layout_json_path))
-            res.save_to_img(str(layout_img_path))
+            try:
+                res.save_to_img(str(layout_img_path))
+            except TypeError as e:
+                print(f"[WARNING] Skipping layout visualization for {file_name} due to color format issue: {e}")
 
 
     # Save OCR results
