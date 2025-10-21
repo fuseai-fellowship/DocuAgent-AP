@@ -5,7 +5,7 @@ from src.utils.paths import RAW
 import cv2 
 if __name__ == "__main__":
   
-    sample_pdf4 = RAW/ "sample_pdf4.pdf"
+    sample_pdf4 = RAW/ "sample_pdf1.pdf"
     process_pdf_pipeline(pdf_path=sample_pdf4, preprocess=True, layout_result_save=True)
     print(f"OCR results for img is done")
     
