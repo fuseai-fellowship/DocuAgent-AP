@@ -40,7 +40,7 @@ def pdf_to_images(pdf_path, dpi=150):
         end_time = time.time()
         print(f"[INFO] PDF to image conversion took {end_time - start_time:.2f} seconds")
 
-def process_pdf_pipeline(pdf_path, preprocess=False, layout_result_save =False, ocr_img_save = False, dpi = 150):
+def process_pdf_pipeline(pdf_path, preprocess=False, layout_result_save =False, dpi = 150):
    
     pdf_name = Path(pdf_path).stem
     start_time = time.time()
@@ -54,8 +54,7 @@ def process_pdf_pipeline(pdf_path, preprocess=False, layout_result_save =False, 
                 pdf_name=pdf_name,
                 preprocess=preprocess,
                 layout_result_save=layout_result_save,
-                pdf_page_num=i+1,
-                ocr_img_save=ocr_img_save
+                pdf_page_num=i+1
             )
             
             page_end_time = time.time()
