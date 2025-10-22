@@ -7,7 +7,7 @@ from src.pipeline.layout_on_image import layout_on_image
 from src.pipeline.image_preprocessing import preprocess_document
 from src.pipeline.ocr_on_image import ocr_on_image
 from src.pipeline.masking_on_image import mask_regions
-from src.utils.save_results import save_results
+from src.utils.save_results import save_results, save_layout_json, save_table_html, save_chart_json
 import json
 
 def preprocess_region(img, x1, y1, x2, y2, pad_w=20, pad_h=20, min_height=32):
@@ -47,12 +47,8 @@ def image_pipeline(img=None, img_path=None, pdf_name=None, preprocess=True, layo
 
     # --- Save Layout ---
     if layout_result_save:
-        layout_dir = OUTPUT / file_name / "layout"
-        layout_dir.mkdir(parents=True, exist_ok=True)
-        for res in layout_results:
-            layout_json = layout_dir / f"{img_name}_layout.json"
-            res.save_to_json(str(layout_json))
-
+        save_layout_json(file_name, img_name, layout_results)
+        
     # --- Masking ---
     masked_img = mask_regions(img, img_name, layout_results)
 
@@ -104,7 +100,6 @@ def image_pipeline(img=None, img_path=None, pdf_name=None, preprocess=True, layo
                     box["block_content"] = str(crop_path)
 
                 elif cls == "table":
-                    crop_path = crop_save_dir / f"{img_name}_region_{i}_{cls}.png"
                     cv2.imwrite(str(crop_path), region)
                     print(f"[INFO] Saved cropped {cls} region: {crop_path}")
 
@@ -117,19 +112,7 @@ def image_pipeline(img=None, img_path=None, pdf_name=None, preprocess=True, layo
                             output_path=str(table_output_dir)
                         )
 
-                        html_files = list(table_output_dir.glob("*.html"))
-
-                        if html_files:
-                            html_file_path = html_files[0]
-                            with open(html_file_path, "r", encoding="utf-8") as f:
-                                html_content = f.read()
-
-                            box["block_content"] = html_content
-                            print(f"[INFO] Table HTML loaded and inserted: {html_file_path}")
-                        else:
-                            print(f"[WARN] No HTML files found in {table_output_dir}")
-                            box["block_content"] = None
-
+                        save_table_html(table_output_dir, box)
                     except Exception as e:
                         print(f"[ERROR] Table recognition failed for {crop_path}: {e}")
                         box["block_content"] = None
@@ -144,20 +127,10 @@ def image_pipeline(img=None, img_path=None, pdf_name=None, preprocess=True, layo
                             output_path=str(chart_json_path)
                         )
                         print(f"[INFO] Chart2Table JSON saved: {chart_json_path}")
-                        with open(chart_json_path, "r") as f:
-                            chart_content = json.load(f)
-                        box["block_content"] = chart_content
+                        save_chart_json(chart_json_path, box)
                     except Exception as e:
                         print(f"[ERROR] Chart2Table failed for {crop_path}: {e}")
                         box["block_content"] = None
-
-    # --- Save OCR visualization ---
-    if ocr_img_save:
-        ocr_vis_dir = OUTPUT / file_name / "ocr/images"
-        ocr_vis_dir.mkdir(parents=True, exist_ok=True)
-        ocr_img_path = ocr_vis_dir / f"{img_name}_ocr_visual.png"
-        cv2.imwrite(str(ocr_img_path), masked_img)
-        print(f"[INFO] Saved OCR visualization image: {ocr_img_path}")
 
     # --- Save results ---
     save_results(

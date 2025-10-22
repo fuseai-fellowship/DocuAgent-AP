@@ -1,7 +1,7 @@
 import cv2, json
+from src.utils.paths import OUTPUT
 
 def save_results(OUTPUT,file_name,img_name, img, page_num, masked_img,ocr_results,original_ocr_results,layout_results=None,layout_result_save=False):
-    
     output_path = OUTPUT / file_name
     output_path.mkdir(parents=True, exist_ok=True)
     
@@ -12,7 +12,7 @@ def save_results(OUTPUT,file_name,img_name, img, page_num, masked_img,ocr_result
     cv2.imwrite(str(masked_img_path), masked_img)
     if layout_result_save == True and layout_results is not None:
     # Save layout results
-        layout_dir = output_path / "layout"
+        layout_dir = output_path
         layout_dir.mkdir(parents=True, exist_ok=True)
 
         layout_img_path = layout_dir / f"{img_name}_layout.png"
@@ -55,3 +55,28 @@ def save_results(OUTPUT,file_name,img_name, img, page_num, masked_img,ocr_result
         json.dump(all_ocr_results, f, indent=4, ensure_ascii=False)
 
     print(f"[INFO] OCR results saved for page {page_num} → {ocr_json_path}")
+
+def save_layout_json(file_name, img_name, layout_results):
+    layout_dir = OUTPUT / file_name
+    layout_dir.mkdir(parents=True, exist_ok=True)
+    for res in layout_results:
+        layout_json = layout_dir / f"{img_name}_layout.json"
+        res.save_to_json(str(layout_json))
+
+def save_table_html(table_output_dir, box):
+    html_files = list(table_output_dir.glob("*.html"))
+    if html_files:
+        html_file_path = html_files[0]
+        with open(html_file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        box["block_content"] = html_content
+        print(f"[INFO] Table HTML loaded and inserted: {html_file_path}")
+    else:
+        print(f"[WARN] No HTML files found in {table_output_dir}")
+        box["block_content"] = None
+    
+def save_chart_json(chart_json_path, box):
+    with open(chart_json_path, "r") as f:
+        chart_content = json.load(f)
+    box["block_content"] = chart_content
