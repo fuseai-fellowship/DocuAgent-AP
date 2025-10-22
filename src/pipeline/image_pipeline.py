@@ -10,23 +10,15 @@ from src.pipeline.masking_on_image import mask_regions
 from src.utils.save_results import save_results
 import json
 
-def preprocess_region(img, x1, y1, x2, y2, pad_w=5, pad_h=5, min_height=32):
+def preprocess_region(img, x1, y1, x2, y2, pad_w=20, pad_h=20, min_height=32):
     # Add padding with boundary checks
     x1_pad = max(0, x1 - pad_w)
     y1_pad = max(0, y1 - pad_h)
     x2_pad = min(img.shape[1], x2 + pad_w)
     y2_pad = min(img.shape[0], y2 + pad_h)
 
-    region = img[y1_pad:y2_pad, x1_pad:x2_pad]
+    return img[y1_pad:y2_pad, x1_pad:x2_pad]
 
-    # Upscale if region is too small
-    h, w = region.shape[:2]
-    if h < min_height:
-        scale = min_height / h
-        new_width = int(w * scale)
-        region = cv2.resize(region, (new_width, min_height), interpolation=cv2.INTER_LINEAR)
-
-    return region
 
 def image_pipeline(img=None, img_path=None, pdf_name=None, preprocess=True, layout_result_save=False, pdf_page_num=1, ocr_img_save=False):
     if img is None and img_path is None:
@@ -112,16 +104,35 @@ def image_pipeline(img=None, img_path=None, pdf_name=None, preprocess=True, layo
                     box["block_content"] = str(crop_path)
 
                 elif cls == "table":
-                    cropped_img = cv2.imread(str(crop_path))  # read as ndarray
-                    if cropped_img is None:
-                        print(f"[ERROR] Failed to read cropped table image: {crop_path}")
-                    else:
-                        html_files = run_table_recognition(cropped_img, output_dir=crop_save_dir/"table_html")
+                    crop_path = crop_save_dir / f"{img_name}_region_{i}_{cls}.png"
+                    cv2.imwrite(str(crop_path), region)
+                    print(f"[INFO] Saved cropped {cls} region: {crop_path}")
+
+                    table_output_dir = crop_save_dir / "table_html"
+                    table_output_dir.mkdir(parents=True, exist_ok=True)
+
+                    try:
+                        run_table_recognition(
+                            image_path=str(crop_path),
+                            output_path=str(table_output_dir)
+                        )
+
+                        html_files = list(table_output_dir.glob("*.html"))
+
                         if html_files:
-                            with open(html_files[0], "r", encoding="utf-8") as f:
-                                box["block_content"] = f.read()
+                            html_file_path = html_files[0]
+                            with open(html_file_path, "r", encoding="utf-8") as f:
+                                html_content = f.read()
+
+                            box["block_content"] = html_content
+                            print(f"[INFO] Table HTML loaded and inserted: {html_file_path}")
                         else:
+                            print(f"[WARN] No HTML files found in {table_output_dir}")
                             box["block_content"] = None
+
+                    except Exception as e:
+                        print(f"[ERROR] Table recognition failed for {crop_path}: {e}")
+                        box["block_content"] = None
 
                 elif cls == "chart":
                     chart_output_dir = crop_save_dir / "chart_json"
