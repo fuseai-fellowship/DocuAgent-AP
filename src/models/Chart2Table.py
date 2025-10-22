@@ -17,19 +17,3 @@ def chart2table_model():
         chart2table_instance = create_model("PP-Chart2Table")
 
     return chart2table_instance
-
-
-def run_chart2table(image_path, output_path="./output"):
-    model = chart2table_model()
-
-    results = model.predict(
-        input={"image": image_path},
-        batch_size=1
-    )
-
-    for res in results:
-        res.print()
-        res.save_to_json(output_path)
-
-    print(f"[INFO] Results saved to {output_path}")
-    return results

@@ -1,7 +1,7 @@
 import time, cv2, random, numpy as np
 from pathlib import Path
-from src.models.Chart2Table import run_chart2table
-from src.models.Table_Recognition_V2 import run_table_recognition, table_recognition_model
+from src.pipeline.chart_extraction import run_chart2table
+from src.pipeline.table_extraction import run_table_recognition
 from src.utils.paths import OUTPUT
 from src.pipeline.layout_on_image import layout_on_image
 from src.pipeline.image_preprocessing import preprocess_document
