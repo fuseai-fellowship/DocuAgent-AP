@@ -10,7 +10,7 @@ TRACK.md
 
 # Virtual environments
 venv/
-.env/
+.env
 .venv/
 
 # Jupyter
