@@ -24,11 +24,12 @@ if __name__ == "__main__":
     # image_pipeline(img_path=sample_img4, preprocess=False, layout_result_save=True)
     # print(f"OCR results for img is done")
     
-    sample_img5 = DATA / "table1.jpg"
-    image_pipeline(img_path=sample_img5, preprocess=False, layout_result_save=True)
-    print(f"✅ OCR results for img is done")
-    chat_with_gemini(OUTPUT / "table1" / "table1_all_results.json")
+    # sample_img5 = DATA / "test.png"
+    # image_pipeline(img_path=sample_img5, preprocess=False, layout_result_save=True)
+    # print(f"✅ OCR results for img is done")
+    # chat_with_gemini(OUTPUT / "test" / "test_all_results.json")
 
-    # sample_pdf2 = DATA / "sample_pdf2.pdf"
-    # process_pdf_pipeline(pdf_path= sample_pdf2,layout_result_save=True, preprocess=False)
-    # print(f"OCR results for PDF pages is done")
+    sample_pdf2 = DATA / "test_pdf.pdf"
+    process_pdf_pipeline(pdf_path= sample_pdf2,layout_result_save=True, preprocess=False)
+    print(f"OCR results for PDF pages is done")
+    chat_with_gemini(OUTPUT / "test_pdf" / "test_pdf_all_results.json")

@@ -8,6 +8,7 @@ import cv2
 import random
 import numpy as np
 from pathlib import Path
+import base64
 
 from src.pipeline.chart_extraction import run_chart2table
 from src.pipeline.table_extraction import run_table_recognition
@@ -114,6 +115,35 @@ def extract_text_from_box(box_coords, structured_ocr_results):
             texts_in_box.append(structured_ocr_results["rec_texts"][idx])
     
     return " ".join(texts_in_box) if texts_in_box else ""
+
+
+def process_image_region(crop_path):
+    """
+    Process an image/figure region: encode the cropped image as base64.
+    
+    Args:
+        crop_path: Path to the already cropped image file
+    
+    Returns:
+        dict with:
+            - "image_path": path to saved cropped image
+            - "block_content": base64-encoded image string
+    """
+    try:
+        crop_path = Path(crop_path)
+        if not crop_path.exists():
+            print(f"[ERROR] Crop path does not exist: {crop_path}")
+            return None
+        
+        # Encode image to base64
+        with open(crop_path, "rb") as img_file:
+            image_b64 = base64.b64encode(img_file.read()).decode("utf-8")
+        
+        return {"image_path": str(crop_path), "base_64_encoded": image_b64}
+    
+    except Exception as e:
+        print(f"[ERROR] Failed to process image region {crop_path}: {e}")
+        return None
 
 
 def process_table_region(region, img_name, region_num, table_dir):
@@ -308,7 +338,7 @@ def image_pipeline(
                 crop_path = save_cropped_img(region, dirs['crop'], img_name, region_num)
                 
                 if cls == "image":
-                    box["block_content"] = str(crop_path)
+                    box["block_content"] = process_image_region(crop_path)
                 
                 elif cls == "table":
                     table_count += 1

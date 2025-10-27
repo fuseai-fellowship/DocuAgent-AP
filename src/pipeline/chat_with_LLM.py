@@ -16,15 +16,20 @@ SYSTEM_INSTRUCTION = """
 You are a document analysis and summarization assistant.
 You will receive JSON data extracted from a document layout.
 Each block includes:
-- label (like "text", "paragraph_title", "figure_title", "table")
+- label (like "text", "paragraph_title", "figure_title", "table", "image")
 - coordinates (its position on the page)
-- block_content (actual extracted text or HTML).
+- block_content (actual extracted text, HTML, or base64 image data).
 
 Your job:
 1. Reconstruct the logical order of the document.
 2. Convert it into a **clean, structured, simplified Markdown version**:
    - Use headings (`#`, `##`, etc.) for titles.
    - Render tables properly in Markdown.
+   - For images:
+       - Include the figure number if present (e.g., "Figure 1:").
+       - Summarize the figure content in a caption under the image using Markdown.
+       - Example:
+         ![Figure 1: Diagram of workflow](data:image/png;base64,...)
    - Fix OCR text issues and spacing.
 3. Keep all key information, remove junk or duplicates.
 4. After generating the Markdown, stay in chat mode and answer questions based only on the document.
@@ -38,18 +43,31 @@ def chat_with_gemini(json_file_path, save_markdown=True):
 
     print("[INFO] Document loaded. Type 'exit' anytime to stop chatting.\n")
 
-    initial_prompt = f"""
-{SYSTEM_INSTRUCTION}
+    # Build parts for Gemini, handling text vs image blocks
+    parts = []
+    for page_key in sorted(doc_data.keys()):
+        page = doc_data[page_key]
+        for box in page.get("boxes", []):
+            if box["label"] == "image":
+                b64_data = box["block_content"]["base_64_encoded"]
+                # Send image as inline_data
+                parts.append({
+                    "inline_data": {
+                        "mime_type": "image/png",
+                        "data": b64_data
+                    }
+                })
+            else:
+                # Send text/html as normal text
+                parts.append({"text": box["block_content"]})
 
-Here is the document layout JSON:
-
-{json.dumps(doc_data, indent=2)}
-
-Please provide the structured Markdown summary first.
-"""
+    initial_prompt = f"{SYSTEM_INSTRUCTION}\n\nHere is the document layout JSON converted to parts for processing."
 
     chat_history = [
-        {"role": "user", "parts": [{"text": initial_prompt}]}
+        {
+            "role": "user",
+            "parts": [{"text": initial_prompt}] + parts
+        }
     ]
 
     first_response = True
