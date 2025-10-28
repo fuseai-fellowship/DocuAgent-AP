@@ -24,7 +24,6 @@ outputs/
 *.jpg
 *.jpeg
 *.json
-*.html
 *.xlsx
 *.md
 uploads/

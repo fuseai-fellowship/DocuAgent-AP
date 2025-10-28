@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Doc Upload & Chat</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-section">
+          <div class="logo-icon">📄</div>
+          <h1 class="app-title">DocAnalyzer</h1>
+        </div>
+        <p class="header-subtitle">AI-Powered Document Analysis</p>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+      <!-- Upload Section -->
+      <section class="section upload-section">
+        <div class="section-header">
+          <div class="step-badge">Step 1</div>
+          <h2>Upload Your Document</h2>
+          <p class="section-description">Upload a file to begin analysis</p>
+        </div>
+        
+        <div class="upload-area" id="upload-area">
+  <input id="fileinput" type="file" accept=".pdf,.doc,.docx,.txt" />
+  <label class="upload-box" id="dropzone" for="fileinput" tabindex="0" role="button" aria-label="Upload document">
+    <div class="upload-inner">
+      <div class="upload-icon" aria-hidden>⬆️</div>
+      <p class="upload-text"><strong>Click to upload</strong> or drag & drop</p>
+      <p class="upload-hint">PDF, DOC, DOCX, TXT • Max 10MB</p>
+    </div>
+    <div class="file-meta hidden" id="fileMeta">
+      <div class="file-name" id="fileName">No file selected</div>
+      <button type="button" class="btn btn-remove" id="removeFile" title="Remove file">✕</button>
+    </div>
+  </label>
+</div>
+
+        <div class="button-group">
+          <button id="uploadBtn" class="btn btn-primary">Upload Document</button>
+        </div>
+        <div id="uploadStatus" class="status-message"></div>
+      </section>
+
+      <!-- Analysis Section -->
+      <section class="section analyze-section">
+        <div class="section-header">
+          <div class="step-badge">Step 2</div>
+          <h2>Analyze Document</h2>
+          <p class="section-description">Generate AI-powered insights</p>
+        </div>
+
+        <div class="file-info">
+          <span class="file-label">Current File:</span>
+          <span id="filename" class="file-name">No file selected</span>
+        </div>
+
+        <button id="analyzeBtn" class="btn btn-primary btn-large" disabled>
+          <span class="btn-icon">✨</span>
+          Analyze Document
+        </button>
+
+        <div id="summaryBox" class="summary-box hidden">
+          <div class="summary-header">
+            <h3>Analysis Summary</h3>
+            <span class="summary-badge">Complete</span>
+          </div>
+          <div class="summary-content"></div>
+        </div>
+      </section>
+
+      <!-- Chat Section -->
+      <section class="section chat-section hidden" id="chatSection">
+        <div class="section-header">
+          <div class="step-badge">Step 3</div>
+          <h2>Chat About Your Document</h2>
+          <p class="section-description">Ask questions and get instant answers</p>
+        </div>
+
+        <div class="chat-container">
+          <div id="chatLog" class="chatlog"></div>
+          <div class="chat-input-wrapper">
+            <div class="chatInput">
+              <input id="userMsg" class="chat-input-field" placeholder="Ask a question about your document..." />
+              <button id="sendBtn" class="btn btn-send">Send</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

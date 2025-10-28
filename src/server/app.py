@@ -167,7 +167,7 @@ async def analyze(filename: str = Form(...)):
         text = extract_text_from_pdf(path)
     else:
         text = extract_text_from_image(path)
-    prompt = "Summarize and give key bullets for the document:\n\n" + (text[:20000] or "")
+    prompt = "Summarize and give key W-H questions answered for the document (no bold text)\n\n" + (text[:20000] or "")
     summary = call_gemini(prompt, max_tokens=512)
     summary_path = path + ".summary.txt"
     with open(summary_path, "w", encoding="utf-8") as f:

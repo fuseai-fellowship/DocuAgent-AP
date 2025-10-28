@@ -11,6 +11,64 @@ const sendBtn = document.getElementById("sendBtn");
 
 let currentFilename = null;
 
+const dropzone = document.getElementById("dropzone");
+const fileMeta = document.getElementById("fileMeta");
+const fileNameEl = document.getElementById("fileName");
+const removeFileBtn = document.getElementById("removeFile");
+
+function setFileState(file) {
+  if (file) {
+    fileMeta.classList.remove("hidden");
+    fileNameEl.textContent = file.name;
+    uploadStatus.textContent = "";
+    uploadBtn.disabled = false;
+    analyzeBtn.disabled = true;
+  } else {
+    fileMeta.classList.add("hidden");
+    fileNameEl.textContent = "No file selected";
+    uploadBtn.disabled = true;
+    analyzeBtn.disabled = true;
+  }
+}
+
+// click opens file dialog
+dropzone.addEventListener("click", (e) => {
+  document.getElementById("fileinput").click();
+});
+
+// file input change
+fileinput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  setFileState(file);
+});
+
+// remove selected file
+removeFileBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  fileinput.value = "";
+  setFileState(null);
+});
+
+// drag & drop UX
+["dragenter","dragover"].forEach(ev =>
+  dropzone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add("dragover"); })
+);
+["dragleave","drop"].forEach(ev =>
+  dropzone.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove("dragover"); })
+);
+dropzone.addEventListener("drop", (e) => {
+  const dt = e.dataTransfer;
+  if (!dt) return;
+  const file = dt.files[0];
+  if (!file) return;
+  fileinput.files = dt.files; // set input files so upload logic works
+  setFileState(file);
+});
+
+// ensure initial state
+setFileState(null);
+
+
 uploadBtn.addEventListener("click", async () => {
   const file = fileinput.files[0];
   if (!file) return alert("Choose a file first");
