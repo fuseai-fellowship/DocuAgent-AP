@@ -31,10 +31,10 @@ function setFileState(file) {
   }
 }
 
-// click opens file dialog
-dropzone.addEventListener("click", (e) => {
-  document.getElementById("fileinput").click();
-});
+// // click opens file dialog
+// dropzone.addEventListener("click", (e) => {
+//   document.getElementById("fileinput").click();
+// });
 
 // file input change
 fileinput.addEventListener("change", (e) => {
@@ -92,7 +92,8 @@ analyzeBtn.addEventListener("click", async () => {
   fd.append("filename", currentFilename);
   const res = await fetch("/analyze", {method:"POST", body:fd});
   const data = await res.json();
-  summaryBox.textContent = data.summary || "No summary";
+  summaryBox.innerHTML = marked.parse(data.summary || "No summary");
+  console.log(data.summary);
   chatSection.classList.remove("hidden");
 });
 
