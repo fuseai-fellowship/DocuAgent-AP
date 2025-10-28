@@ -42,3 +42,5 @@ Thumbs.db
 # Temporary output folder
 temp/
 apitest.py
+temp_funsd_images/
+evaluation/
