@@ -27,6 +27,7 @@ outputs/
 *.html
 *.xlsx
 *.md
+uploads/
 
 # OS/system
 .DS_Store
@@ -41,3 +42,4 @@ Thumbs.db
 
 # Temporary output folder
 temp/
+apitest.py

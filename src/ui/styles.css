@@ -1,0 +1,13 @@
+body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#f6f8fb;color:#111}
+.container{max-width:900px;margin:40px auto;padding:20px;background:#fff;border-radius:8px;box-shadow:0 6px 24px rgba(30,40,60,.08)}
+h1{margin:0 0 12px}
+.upload,.analyze{margin:12px 0}
+button{padding:8px 12px;border-radius:6px;border:1px solid #d0d7de;background:#0b69ff;color:#fff;cursor:pointer}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.box{padding:12px;border:1px solid #e6eef9;background:#fbfdff;border-radius:6px;margin-top:8px}
+.hidden{display:none}
+.chatlog{height:240px;overflow:auto;padding:8px;border:1px solid #eee;background:#fafafa;border-radius:6px;margin-bottom:8px}
+.chatlog .user{color:#0b69ff}
+.chatlog .bot{color:#333}
+.chatInput{display:flex;gap:8px}
+.chatInput input{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px}
