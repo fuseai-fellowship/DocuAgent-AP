@@ -10,7 +10,7 @@ TRACK.md
 
 # Virtual environments
 venv/
-.env/
+.env
 .venv/
 
 # Jupyter
@@ -24,9 +24,9 @@ outputs/
 *.jpg
 *.jpeg
 *.json
-*.html
 *.xlsx
 *.md
+uploads/
 
 # OS/system
 .DS_Store
@@ -41,3 +41,6 @@ Thumbs.db
 
 # Temporary output folder
 temp/
+apitest.py
+temp_funsd_images/
+evaluation/
