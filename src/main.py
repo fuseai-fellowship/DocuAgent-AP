@@ -43,8 +43,8 @@ if __name__ == "__main__":
     # -----------------------------
     # Example: Running pipeline on a single image
     # -----------------------------
-    sample_chart = DATA / "example.png"
-    image_pipeline(img_path=sample_chart, preprocess=False, layout_result_save=True)
+    # sample_chart = DATA / "example.png"
+    # image_pipeline(img_path=sample_chart, preprocess=False, layout_result_save=True)
 
     sample_pdf4 = DATA / "sample_pdf1.pdf"
     process_pdf_pipeline(pdf_path=sample_pdf4, preprocess=False, layout_result_save=True)
