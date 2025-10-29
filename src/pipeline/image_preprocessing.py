@@ -148,7 +148,29 @@ def remove_borders(image):
     return image[y:y+h, x:x+w]
 
 # Full preprocessing pipeline 
+# Full preprocessing pipeline 
 def preprocess_document(image):
+    """
+    Apply a sequence of preprocessing steps to a document image to improve OCR accuracy.
+
+    The pipeline performs the following operations in order:
+        1. Remove page borders or margins.
+        2. Sharpen the image to enhance edges and blurred text.
+        3. Enhance contrast using CLAHE (Contrast Limited Adaptive Histogram Equalization).
+        4. Convert the image to grayscale (binarization step).
+        5. Remove noise using dilation, erosion, morphological closing, and median blur.
+
+    Args:
+        image (np.ndarray): Input document image in BGR or grayscale format.
+
+    Returns:
+        np.ndarray: Preprocessed image suitable for OCR or further document analysis.
+    
+    Notes:
+        - Deskewing is currently commented out but can be enabled if required.
+        - The output is a clean, high-contrast, binarized image with reduced noise.
+        - Works with both color and grayscale images.
+    """
     # image, _ = deskew(image)
     image = remove_borders(image)
     image = sharpen_image(image)
