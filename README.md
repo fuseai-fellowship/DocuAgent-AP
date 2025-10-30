@@ -74,7 +74,7 @@ For the complete list, see `requirements.txt`.
 
 ## Demo Video
 
-[Watch the demo here](https://youtu.be/Ws5KonFE9iM)
+[Watch the demo here](https://youtu.be/nZaeeclYW-0)
 
 
 
