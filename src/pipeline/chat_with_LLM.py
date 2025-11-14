@@ -12,9 +12,7 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 GEMINI_BASE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 headers = {"Content-Type": "application/json"}
 
-# ------------------------------
-# 🧠 "System-like" instruction
-# ------------------------------
+
 SYSTEM_INSTRUCTION = """
 You are a document analysis and summarization assistant.
 You will receive JSON data extracted from a document layout.

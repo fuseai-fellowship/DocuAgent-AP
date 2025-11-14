@@ -43,9 +43,14 @@ if __name__ == "__main__":
     # -----------------------------
     # Example: Running pipeline on a single image
     # -----------------------------
+<<<<<<< HEAD
     sample_chart = DATA / "example.png"
     # image_pipeline(img_path=sample_chart, preprocess=False, layout_result_save=True)
     chat_with_openai(json_file_path='outputs/resume_upahar_khatiwada/resume_upahar_khatiwada_all_results.json', save_markdown=False)
+=======
+    # sample_chart = DATA / "example.png"
+    # image_pipeline(img_path=sample_chart, preprocess=False, layout_result_save=True)
+>>>>>>> 82ce117a38706225f2fe3b1d7486477d23cbd466
 
     # sample_pdf4 = DATA / "sample_pdf1.pdf"
     # process_pdf_pipeline(pdf_path=sample_pdf4, preprocess=False, layout_result_save=True)
