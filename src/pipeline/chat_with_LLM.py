@@ -2,11 +2,14 @@ import requests
 import json
 from dotenv import load_dotenv
 import os
+from openai import OpenAI
+from pathlib import Path
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+GEMINI_BASE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 headers = {"Content-Type": "application/json"}
 
 # ------------------------------
@@ -37,20 +40,82 @@ Your job:
 Return only valid Markdown for your first message.
 """
 
+
+def chat_with_openai(json_file_path: str, save_markdown: bool = True):
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY not set in environment")
+
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
+    with open(json_file_path, "r", encoding="utf-8") as f:
+        doc_data = json.load(f)
+
+    print("[INFO] Document loaded. Type 'exit' anytime to stop chatting.\n")
+
+    content_text = ""
+    for page_key in sorted(doc_data.keys()):
+        page = doc_data[page_key]
+        for box in page.get("boxes", []):
+            label = box.get("label", "")
+            content = box.get("block_content", "")
+            if label == "image" and isinstance(content, dict) and "base_64_encoded" in content:
+                content_text += f"\n![Image placeholder: base64 data]\n"
+            elif content.strip():
+                content_text += f"{content.strip()}\n\n"
+
+    initial_prompt = SYSTEM_INSTRUCTION + "\n\nDocument content:\n" + content_text
+    response = client.chat.completions.create(
+        model="gpt-5-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM_INSTRUCTION},
+            {"role": "user", "content": initial_prompt}
+        ]
+    )
+
+    markdown_summary = response.choices[0].message.content
+    print("\n🧠 OpenAI Markdown Summary Generated:\n", markdown_summary)
+
+    if save_markdown:
+        md_path = Path(json_file_path).with_name(Path(json_file_path).stem + "_summary.md")
+        with open(md_path, "w", encoding="utf-8") as md_file:
+            md_file.write(markdown_summary)
+        print(f"\n📄 Structured Markdown summary saved to: {md_path}")
+
+    system_context = f"You are a helpful assistant. Use the following document summary to answer questions:\n{markdown_summary}"
+    chat_history = [{"role": "system", "content": system_context}]
+
+    while True:
+        user_input = input("\n💬 You: ")
+        if user_input.lower() in ["exit", "quit", "bye"]:
+            print("👋 Chat ended.")
+            break
+
+        chat_history.append({"role": "user", "content": user_input})
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-5-mini",
+                messages=chat_history
+            )
+            reply = response.choices[0].message.content
+            print("\n🧠 OpenAI:\n", reply)
+
+        except Exception as e:
+            print("[ERROR] OpenAI request failed:", e)
+
 def chat_with_gemini(json_file_path, save_markdown=True):
     with open(json_file_path, "r", encoding="utf-8") as f:
         doc_data = json.load(f)
 
     print("[INFO] Document loaded. Type 'exit' anytime to stop chatting.\n")
 
-    # Build parts for Gemini, handling text vs image blocks
     parts = []
     for page_key in sorted(doc_data.keys()):
         page = doc_data[page_key]
         for box in page.get("boxes", []):
             if box["label"] == "image":
                 b64_data = box["block_content"]["base_64_encoded"]
-                # Send image as inline_data
                 parts.append({
                     "inline_data": {
                         "mime_type": "image/png",
@@ -58,7 +123,6 @@ def chat_with_gemini(json_file_path, save_markdown=True):
                     }
                 })
             else:
-                # Send text/html as normal text
                 parts.append({"text": box["block_content"]})
 
     initial_prompt = f"{SYSTEM_INSTRUCTION}\n\nHere is the document layout JSON converted to parts for processing."
@@ -73,7 +137,7 @@ def chat_with_gemini(json_file_path, save_markdown=True):
     first_response = True
 
     while True:
-        response = requests.post(url, headers=headers, data=json.dumps({"contents": chat_history}))
+        response = requests.post(GEMINI_BASE_URL, headers=headers, data=json.dumps({"contents": chat_history}))
         
         if response.status_code != 200:
             print("Error:", response.status_code, response.text)

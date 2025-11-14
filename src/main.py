@@ -1,7 +1,7 @@
 from src.pipeline.image_pipeline import image_pipeline
 from src.pipeline.pdf_ingest import process_pdf_pipeline
 from src.utils.paths import DATA, OUTPUT
-from src.pipeline.chat_with_LLM import chat_with_gemini
+from src.pipeline.chat_with_LLM import chat_with_gemini, chat_with_openai
 from pathlib import Path
 from datasets import load_dataset
 
@@ -44,11 +44,12 @@ if __name__ == "__main__":
     # Example: Running pipeline on a single image
     # -----------------------------
     sample_chart = DATA / "example.png"
-    image_pipeline(img_path=sample_chart, preprocess=False, layout_result_save=True)
+    # image_pipeline(img_path=sample_chart, preprocess=False, layout_result_save=True)
+    chat_with_openai(json_file_path='outputs/resume_upahar_khatiwada/resume_upahar_khatiwada_all_results.json', save_markdown=False)
 
-    sample_pdf4 = DATA / "sample_pdf1.pdf"
-    process_pdf_pipeline(pdf_path=sample_pdf4, preprocess=False, layout_result_save=True)
-    print(f"OCR results for image and PDF are done")
+    # sample_pdf4 = DATA / "sample_pdf1.pdf"
+    # process_pdf_pipeline(pdf_path=sample_pdf4, preprocess=False, layout_result_save=True)
+    # print(f"OCR results for image and PDF are done")
 
     # Run pipeline on additional sample images
     # sample_img1 = DATA / "sample_image1.png"
