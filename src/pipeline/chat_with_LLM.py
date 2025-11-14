@@ -38,7 +38,6 @@ Your job:
 Return only valid Markdown for your first message.
 """
 
-
 def chat_with_openai(json_file_path: str, save_markdown: bool = True):
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if not OPENAI_API_KEY:

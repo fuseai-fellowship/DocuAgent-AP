@@ -31,11 +31,6 @@ function setFileState(file) {
   }
 }
 
-// // click opens file dialog
-// dropzone.addEventListener("click", (e) => {
-//   document.getElementById("fileinput").click();
-// });
-
 // file input change
 fileinput.addEventListener("change", (e) => {
   const file = e.target.files[0];
@@ -68,7 +63,6 @@ dropzone.addEventListener("drop", (e) => {
 // ensure initial state
 setFileState(null);
 
-
 async function waitForProcessing(filename) {
   let ready = false;
   while (!ready) {
@@ -99,7 +93,7 @@ uploadBtn.addEventListener("click", async () => {
   const data = await res.json();
   currentFilename = data.filename;
   filenameEl.textContent = currentFilename;
-
+  fileNameEl.textContent = currentFilename;
   if (data.status === "processing_started") {
     uploadStatus.textContent = "Processing PDF...";
     await waitForProcessing(currentFilename);
