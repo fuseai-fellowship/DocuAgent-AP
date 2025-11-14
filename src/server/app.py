@@ -96,7 +96,7 @@ def analyze(filename: str = Form(...)):
                 {"role": "user", "content": initial_prompt}
             ]
         )
-        print("OpenAI response raw:", response)
+        # print("OpenAI response raw:", response)
         markdown_summary = response.choices[0].message.content
     except Exception as e:
         print("[ERROR] OpenAI call failed:", e)
@@ -106,10 +106,32 @@ def analyze(filename: str = Form(...)):
     with open(md_path, "w", encoding="utf-8") as md_file:
         md_file.write(markdown_summary)
 
-    print(markdown_summary)
+    print(md_path)
 
     return {"summary": markdown_summary, "summary_path": str(md_path)}
 
 @app.post('/chat')
-async def chat():
-    pass
+async def chat(filename: str = Form(...), message: str = Form(...)):
+    fname_without_ext = os.path.splitext(filename)[0]
+    summary_path = os.path.join(OUTPUT_DIR, fname_without_ext, fname_without_ext + "_all_results.md")
+    print(summary_path)
+
+    if not os.path.exists(summary_path):
+        return JSONResponse({"error": f"Summary file not found: {summary_path}"}, status_code=404)
+    
+    with open(summary_path, "r", encoding="utf-8") as f:
+        context = f.read()
+
+    prompt = f"You are a helpful assistant. Use the following document summary to answer questions:\n\n{context}\n\nUser question: {message}\n\nAnswer concisely."
+
+    response = client.chat.completions.create(
+        model="gpt-5-mini",
+        messages=[
+            {"role": "system", "content": "You are a document analysis assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    answer = response.choices[0].message.content
+    
+    return {"answer": answer}

@@ -102,6 +102,7 @@ uploadBtn.addEventListener("click", async () => {
   }
 });
 
+let summary_path;
 
 analyzeBtn.addEventListener("click", async () => {
   if (!currentFilename) return;
@@ -114,6 +115,7 @@ analyzeBtn.addEventListener("click", async () => {
   const res = await fetch("/analyze", { method: "POST", body: fd });
   const data = await res.json();
   summaryBox.innerHTML = marked.parse(data.summary || "No summary");
+  summary_path = data.summary_path;
   chatSection.classList.remove("hidden");
   analyzeBtn.disabled = false;
 });
