@@ -1,6 +1,5 @@
 
 
-from pathlib import Path
 import time
 from src.models.paddle_models import ocr_model
 
