@@ -7,6 +7,4 @@ jupyterlab
 ipywidgets
 ipykernel
 
-# --- Development & Debugging ---
-pytest
-debugpy
+

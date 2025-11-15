@@ -1,26 +1,32 @@
-# DocuAgent — AI Solution to Structurize Your Docs
+# DocuAgent — AI Solution to Structure Your Documents
 
-DocuAgent is an intelligent document processing pipeline that leverages advanced AI models to automatically extract, structure, and summarize content from PDF documents.
+DocuAgent is an intelligent document-processing pipeline that leverages advanced AI models to automatically extract, structure, and summarize content from PDF documents.
 
 ## Overview
 
-DocuAgent combines cutting-edge computer vision and natural language processing to transform unstructured PDFs into organized, machine-readable formats. Whether you're dealing with financial reports, technical documentation, or complex forms, DocuAgent extracts layout information, recognizes tables, and generates intelligent summaries.
+DocuAgent combines state-of-the-art computer vision, deep learning, and natural language processing techniques to transform unstructured PDFs into structured, machine-readable formats.
+
+Whether you're processing financial reports, invoices, technical papers, or complex handwritten forms, DocuAgent can:
+
+- Extract text from documents
+- Detect layout regions and document structure
+- Recognize and convert tables to structured formats
+- Produce structured outputs in JSON format
+- Generate concise summaries
 
 ## Features
 
-- **PDF Processing**: Convert PDFs to images and extract text using OCR
-- **Layout Recognition**: Identify document structure 
-- **Table Detection & Extraction**: Automatically recognize and parse tables 
-- **Flexible Output**: Structured JSON
-- **Configurable Pipeline**: YAML/JSON configuration for customizable processing
+- **PDF Processing** – Convert PDFs to images and extract text
+- **Layout Recognition** – Detect headers, paragraphs, tables, figures, and other document elements
+- **Table Detection & Extraction** – Parse complex tables into structured formats
+- **Flexible Output** – JSON format with layout, table structure, and content
+- **Configurable Pipeline** – YAML/JSON-based configuration system
+- **FastAPI Backend** – Real-time document processing and serving
 
 ## Project Structure
-
 ```
 docuagent/
 ├── data/                          # PDFs, datasets (train/val/test splits)
-│   ├── raw/                       # Original PDF files
-│   └── processed/                 # Preprocessed JSON, OCR outputs
 ├── src/                           # Source code
 │   ├── preprocessing/             # PDF to image, OCR, text extraction
 │   ├── models/                    # LayoutLM, TableFormer, summarizers
@@ -28,9 +34,6 @@ docuagent/
 │   └── pipeline.py                # Main pipeline orchestration script
 ├── notebooks/                     # Jupyter/Colab notebooks for experiments
 ├── outputs/                       # Structured results (JSON, summaries, charts)
-├── configs/                       # YAML/JSON configuration files
-│                                  # (paths, hyperparameters, model settings)
-├── tests/                         # Unit tests for each module
 ├── requirements.txt               # Project dependencies
 ├── README.md                      # This file
 └── .gitignore                     # Git ignore rules (large files, venv, cache)
@@ -40,41 +43,55 @@ docuagent/
 
 ### Prerequisites
 
-- Python 3.8+
-- pip or conda
-- For GPU acceleration: CUDA 11.0+
+- Python 3.8 or higher
+- pip or conda package manager
+- For GPU acceleration: CUDA 11.0 or higher
 
-### Setup
+### Setup Instructions
 
-1. Clone the repository:
+#### 1. Clone the Repository
 ```bash
 git clone <repository-url>
 cd docuagent
 ```
 
-2. Create a virtual environment:
+#### 2. Create a Virtual Environment
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+#### 3. Install Dependencies
+
+The installation process requires two steps due to PaddlePaddle dependencies.
+
+**Step 1: Install PaddlePaddle with GPU Support**
+
+Visit the official PaddlePaddle installation page and select the version compatible with your CUDA installation:
+
+https://www.paddlepaddle.org.cn/en/
+
+Follow the installation command provided for your specific CUDA version.
+
+**Step 2: Install Remaining Dependencies**
+
+Before proceeding, verify your PaddlePaddle installation is compatible with PaddleOCR. Refer to the compatibility table:
+
+- PaddleOCR 3.0.0 requires PaddleX 3.0.0 and PaddlePaddle ≥ 3.0.0
+- PaddleOCR 3.1.x requires PaddleX ≥ 3.1.0, < 3.2.0 and PaddlePaddle ≥ 3.0.0
+
+Full compatibility documentation: https://www.paddleocr.ai/main/en/version3.x/paddleocr_and_paddlex.html
+
+Once PaddlePaddle is installed and verified, install the remaining dependencies:
 ```bash
-pip install -r requirements.txt
+pip install -r requirements/base.txt
 ```
 
-## Dependencies
+## Demo
 
-Key dependencies include:
+Watch the demonstration video: https://youtu.be/nZaeeclYW-0
 
-- **PyMuPDF** — PDF to image conversion
-- **paddleocr** — Optical character recognition and Layout Models
+## Usage
 
-For the complete list, see `requirements.txt`.
-
-## Demo Video
-
-[Watch the demo here](https://youtu.be/nZaeeclYW-0)
-
-
+Documentation for running the pipeline and API usage coming soon.
 

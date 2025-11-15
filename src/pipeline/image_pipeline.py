@@ -103,7 +103,7 @@ def extract_text_from_box(box_coords, structured_ocr_results):
     """
     x1, y1, x2, y2 = box_coords
     texts_in_box = []
-    
+    ocr_conf = []
     for idx, poly in enumerate(structured_ocr_results["rec_polys"]):
         # Calculate centroid of text polygon
         xs = [p[0] for p in poly]
@@ -113,8 +113,9 @@ def extract_text_from_box(box_coords, structured_ocr_results):
         # Check if centroid is within box bounds
         if x1 <= cx <= x2 and y1 <= cy <= y2:
             texts_in_box.append(structured_ocr_results["rec_texts"][idx])
+            ocr_conf.append(structured_ocr_results["rec_scores"][idx])
     
-    return " ".join(texts_in_box) if texts_in_box else ""
+    return " ".join(texts_in_box) if texts_in_box else "", ocr_conf
 
 
 def process_image_region(crop_path):
@@ -327,10 +328,11 @@ def image_pipeline(
             
             # ===== Process Text Blocks =====
             if cls not in SKIP_FOR_OCR:
-                box["block_content"] = extract_text_from_box(
+                box["block_content"], ocr_conf = extract_text_from_box(
                     (x1, y1, x2, y2),
                     structured_ocr_results
                 )
+                box['ocr_confidence'] = sum(ocr_conf) / len(ocr_conf) if ocr_conf else 0.0
             
             # ===== Process Special Regions (Image/Chart/Table) =====
             elif cls in ["image", "chart", "table"]:

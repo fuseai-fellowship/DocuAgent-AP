@@ -31,7 +31,9 @@ def table_recognition_model():
         table_recognition_instance = TableRecognitionPipelineV2(
             use_doc_orientation_classify=False,  # Disabled for speed
             use_doc_unwarping=False,  # Disabled for speed
-            device="gpu:0" if paddle.is_compiled_with_cuda() else "cpu"
+            device="gpu:0" if paddle.is_compiled_with_cuda() else "cpu",
+            text_detection_model_name="PP-OCRv5_server_det",
+            text_recognition_model_name="PP-OCRv5_server_rec"
         )
     
     return table_recognition_instance
