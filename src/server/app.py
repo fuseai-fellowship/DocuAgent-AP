@@ -6,18 +6,34 @@ import json
 from dotenv import load_dotenv
 import os, shutil
 from openai import OpenAI
+from google import genai
 from pathlib import Path
 from src.pipeline.pdf_ingest import process_pdf_pipeline
 from src.pipeline.chat_with_LLM import SYSTEM_INSTRUCTION
+
 
 load_dotenv()
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+openai_client = None
+if OPENAI_API_KEY:
+    try:
+        openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    except Exception as e:
+        print("[WARNING] Failed to initialize OpenAI client:", e)
+        openai_client = None
+
+genai_client = None
+if GEMINI_API_KEY:
+    # initialize genai client
+    genai_client = genai.Client(api_key=GEMINI_API_KEY)
+    
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -52,6 +68,7 @@ async def upload_file(file: UploadFile = File(...)):
 
     return {"filename": file.filename, "status" : "uploaded"}
 
+
 @app.post("/analyze")
 def analyze(filename: str = Form(...)):
     if not filename:
@@ -65,7 +82,6 @@ def analyze(filename: str = Form(...)):
 
     fname_without_ext = os.path.splitext(filename)[0]
     json_file_path = os.path.join(OUTPUT_DIR, fname_without_ext, f"{fname_without_ext}_all_results.json")
-    print(json_file_path)
 
     if not os.path.exists(json_file_path):
         return {"error": "JSON output not found"}
@@ -73,7 +89,6 @@ def analyze(filename: str = Form(...)):
     with open(json_file_path, "r", encoding="utf-8") as f:
         doc_data = json.load(f)
 
-    print('ABOVE FLATTEN CONTENT')
     # Flatten content into text for prompt
     content_text = ""
     for page_key in sorted(doc_data.keys()):
@@ -82,31 +97,68 @@ def analyze(filename: str = Form(...)):
             label = box.get("label", "")
             content = box.get("block_content", "")
             if label == "image" and isinstance(content, dict) and "base_64_encoded" in content:
-                content_text += f"![Figure placeholder]\n"
-            elif content.strip():
+                content_text += "![Figure placeholder]\n"
+            elif isinstance(content, str) and content.strip():
                 content_text += content.strip() + "\n\n"
-    print('BELOW FLATTEN CONTENT')
+
     initial_prompt = SYSTEM_INSTRUCTION + "\n\nDocument content:\n" + content_text
 
-    try:
-        response = client.chat.completions.create(
-            model = 'gpt-5-mini',
-            messages = [
-                {"role": "system", "content": SYSTEM_INSTRUCTION},
-                {"role": "user", "content": initial_prompt}
-            ]
-        )
-        # print("OpenAI response raw:", response)
-        markdown_summary = response.choices[0].message.content
-    except Exception as e:
-        print("[ERROR] OpenAI call failed:", e)
-        return JSONResponse({"error": str(e)}, status_code=500)
+    # Try OpenAI first
+    markdown_summary = None
+    openai_error = None
+    gemini_error = None
 
+    if openai_client:
+        try:
+            response = openai_client.chat.completions.create(
+                model='gpt-5-mini',
+                messages=[
+                    {"role": "system", "content": SYSTEM_INSTRUCTION},
+                    {"role": "user", "content": initial_prompt}
+                ]
+            )
+            markdown_summary = response.choices[0].message.content
+        except Exception as e:
+            openai_error = str(e)
+            print("[ERROR] OpenAI call failed:", e)
+
+    # Fallback to Gemini if OpenAI failed
+    if markdown_summary is None and genai_client:
+        try:
+            gem_resp = genai_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=initial_prompt
+            )
+            # genai response text typically in .text
+        # Try to extract clean text from Gemini
+            if hasattr(gem_resp, "text") and gem_resp.text:
+                markdown_summary = gem_resp.text
+            else:
+                try:
+                    markdown_summary = gem_resp.candidates[0].content.parts[0].text
+                except:
+                    markdown_summary = None
+
+        except Exception as e:
+            gemini_error = str(e)
+            print("[ERROR] Gemini call failed:", e)
+
+    # If still no summary, return combined error
+    if markdown_summary is None:
+        return JSONResponse(
+            {
+                "error": "Both OpenAI and Gemini calls failed or were unavailable.",
+                "openai_error": openai_error,
+                "gemini_error": gemini_error
+            },
+            status_code=500
+        )
+
+    # Save markdown summary next to JSON file (same folder, .md)
     md_path = Path(json_file_path).with_suffix(".md")
+    os.makedirs(md_path.parent, exist_ok=True)
     with open(md_path, "w", encoding="utf-8") as md_file:
         md_file.write(markdown_summary)
-
-    print(md_path)
 
     return {"summary": markdown_summary, "summary_path": str(md_path)}
 
@@ -124,14 +176,52 @@ async def chat(filename: str = Form(...), message: str = Form(...)):
 
     prompt = f"You are a helpful assistant. Use the following document summary to answer questions:\n\n{context}\n\nUser question: {message}\n\nAnswer concisely."
 
-    response = client.chat.completions.create(
-        model="gpt-5-mini",
-        messages=[
-            {"role": "system", "content": "You are a document analysis assistant."},
-            {"role": "user", "content": prompt}
-        ]
-    )
+    # Try OpenAI first
+    answer = None
+    openai_error = None
+    gemini_error = None
 
-    answer = response.choices[0].message.content
-    
+    if OPENAI_API_KEY:
+        try:
+            response = openai_client.chat.completions.create(
+                model="gpt-5-mini",
+                messages=[
+                    {"role": "system", "content": "You are a document analysis assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            answer = response.choices[0].message.content
+        except Exception as e:
+            openai_error = str(e)
+            print("[ERROR] OpenAI call failed:", e)
+
+    # Fallback to Gemini
+    if answer is None and genai_client:
+        try:
+            gem_resp = genai_client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            
+            if hasattr(gem_resp, "text") and gem_resp.text:
+                answer = gem_resp.text
+            else:
+                try:
+                    answer = gem_resp.candidates[0].content.parts[0].text
+                except:
+                    answer = None
+        except Exception as e:
+            gemini_error = str(e)
+            print("[ERROR] Gemini call failed:", e)
+
+    if answer is None:
+        return JSONResponse(
+            {
+                "error": "Both OpenAI and Gemini calls failed or were unavailable.",
+                "openai_error": openai_error,
+                "gemini_error": gemini_error
+            },
+            status_code=500
+        )
+
     return {"answer": answer}
