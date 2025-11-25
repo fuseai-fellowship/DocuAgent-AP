@@ -50,7 +50,7 @@ async def upload_file(file: UploadFile = File(...)):
     
     # print(fname, saved_path)
 
-    return {"filename": file.filename, "status" : "processing_started"}
+    return {"filename": file.filename, "status" : "uploaded"}
 
 @app.post("/analyze")
 def analyze(filename: str = Form(...)):

@@ -63,44 +63,51 @@ dropzone.addEventListener("drop", (e) => {
 // ensure initial state
 setFileState(null);
 
-async function waitForProcessing(filename) {
-  let ready = false;
-  while (!ready) {
-    await new Promise(r => setTimeout(r, 2000));
-    const fd = new FormData();
-    fd.append("filename", filename);
-    const res = await fetch("/analyze", { method: "POST", body: fd });
-    const data = await res.json();
-    if (!data.error && data.summary) {
-      ready = true;
-      summaryBox.classList.remove("hidden");
-      summaryBox.innerHTML = marked.parse(data.summary);
-      chatSection.classList.remove("hidden");
-      analyzeBtn.disabled = false;
-    } else {
-      uploadStatus.textContent = "Processing PDF... please wait";
-    }
-  }
-}
+// async function waitForProcessing(filename) {
+//   let ready = false;
+//   while (!ready) {
+//     await new Promise(r => setTimeout(r, 2000));
+//     const fd = new FormData();
+//     fd.append("filename", filename);
+//     const res = await fetch("/analyze", { method: "POST", body: fd });
+//     const data = await res.json();
+//     if (!data.error && data.summary) {
+//       ready = true;
+//       summaryBox.classList.remove("hidden");
+//       summaryBox.innerHTML = marked.parse(data.summary);
+//       chatSection.classList.remove("hidden");
+//       analyzeBtn.disabled = false;
+//     } else {
+//       uploadStatus.textContent = "Processing PDF... please wait";
+//     }
+//   }
+// }
 
 uploadBtn.addEventListener("click", async () => {
   const file = fileinput.files[0];
   if (!file) return alert("Choose a file first");
+
+  uploadBtn.disabled = true;
+  analyzeBtn.disabled = true;
+  uploadStatus.textContent = "Uploading...";
+
   const fd = new FormData();
   fd.append("file", file);
-  uploadStatus.textContent = "Uploading...";
+
   const res = await fetch("/upload", { method: "POST", body: fd });
   const data = await res.json();
+
   currentFilename = data.filename;
   filenameEl.textContent = currentFilename;
   fileNameEl.textContent = currentFilename;
-  if (data.status === "processing_started") {
-    uploadStatus.textContent = "Processing PDF...";
-    await waitForProcessing(currentFilename);
-  } else {
-    analyzeBtn.disabled = false;
-  }
+
+  uploadStatus.textContent = "Upload complete.";
+  
+  analyzeBtn.disabled = false;
+
+  uploadBtn.disabled = false;
 });
+
 
 let summary_path;
 
